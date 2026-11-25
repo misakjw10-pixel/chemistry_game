@@ -82,7 +82,51 @@ chemicals = [
 
 
 # =====================================
-# 3. 주기율표 118개 원소
+# 3. 단계별 난이도
+# =====================================
+
+stage_chemicals = {
+    1: [
+        "물", "일산화 탄소", "메테인",
+        "암모니아", "염화 나트륨"
+    ],
+
+    2: [
+        "이산화 탄소", "과산화 수소",
+        "이산화 질소", "염화 칼슘",
+        "산화 마그네슘", "염화 칼륨",
+        "프로페인"
+    ],
+
+    3: [
+        "황산", "에탄올", "질산",
+        "탄산 칼슘", "수산화 나트륨",
+        "이산화 황", "인산"
+    ],
+
+    4: [
+        "포도당", "아세트산", "요소",
+        "산화 철(III)", "산화 알루미늄",
+        "탄산수소 나트륨", "벤젠", "뷰테인"
+    ],
+
+    5: [
+        "설탕(자당)", "포도당", "탄산수소 나트륨",
+        "인산", "황산", "아세트산", "요소"
+    ]
+}
+
+stage_names = {
+    1: "입문",
+    2: "초급",
+    3: "중급",
+    4: "고급",
+    5: "전문가"
+}
+
+
+# =====================================
+# 4. 원소 목록
 # =====================================
 
 elements = [
@@ -131,18 +175,34 @@ elements = [
 
 
 # =====================================
-# 4. 게임 초기화
+# 5. 문제 출제 함수
+# =====================================
+
+def select_chemical(stage, previous=None):
+
+    available = [
+        chemical for chemical in chemicals
+        if chemical[0] in stage_chemicals[stage]
+        and chemical != previous
+    ]
+
+    return random.choice(available)
+
+
+# =====================================
+# 6. 게임 초기화
 # =====================================
 
 if "stage" not in st.session_state:
+
     st.session_state.stage = 1
     st.session_state.user_formula = {}
-    st.session_state.chemical = random.choice(chemicals)
+    st.session_state.chemical = select_chemical(1)
     st.session_state.status = "playing"
 
 
 # =====================================
-# 5. 분자식 출력 함수
+# 7. 분자식 출력 함수
 # =====================================
 
 def print_formula(formula):
@@ -160,20 +220,22 @@ def print_formula(formula):
 
 
 # =====================================
-# 6. 원소 선택 함수
+# 8. 원소 선택 함수
 # =====================================
 
 def add_element(element):
 
     if element in st.session_state.user_formula:
+
         st.session_state.user_formula[element] += 1
 
     else:
+
         st.session_state.user_formula[element] = 1
 
 
 # =====================================
-# 7. 정답 확인 함수
+# 9. 정답 확인 함수
 # =====================================
 
 def check_right():
@@ -192,42 +254,37 @@ def check_right():
 
 
 # =====================================
-# 8. 새로운 문제 출제 함수
+# 10. 새로운 문제 출제 함수
 # =====================================
 
 def new_question():
 
-    previous_chemical = st.session_state.chemical
-
-    available_chemicals = []
-
-    for chemical in chemicals:
-
-        if chemical != previous_chemical:
-            available_chemicals.append(chemical)
+    previous = st.session_state.chemical
 
     st.session_state.user_formula = {}
 
-    st.session_state.chemical = random.choice(
-        available_chemicals
+    st.session_state.chemical = select_chemical(
+        st.session_state.stage,
+        previous
     )
 
     st.session_state.status = "playing"
 
 
 # =====================================
-# 9. 처음으로 돌아가기 함수
+# 11. 처음으로 돌아가기 함수
 # =====================================
 
 def restart_game():
 
     st.session_state.stage = 1
-
-    new_question()
+    st.session_state.user_formula = {}
+    st.session_state.chemical = select_chemical(1)
+    st.session_state.status = "playing"
 
 
 # =====================================
-# 10. 다음 단계 함수
+# 12. 다음 단계 함수
 # =====================================
 
 def next_stage():
@@ -240,24 +297,34 @@ def next_stage():
 
         st.session_state.stage += 1
 
-        new_question()
+        st.session_state.user_formula = {}
+
+        st.session_state.chemical = select_chemical(
+            st.session_state.stage
+        )
+
+        st.session_state.status = "playing"
 
 
 # =====================================
-# 11. 게임 제목
+# 13. 게임 제목 및 단계 표시
 # =====================================
 
 st.title("🧪 분자식 만들기 게임")
 
 st.subheader(
-    str(st.session_state.stage) + "단계 / 5단계"
+    f"{st.session_state.stage}단계 / 5단계"
+)
+
+st.write(
+    f"현재 난이도: {stage_names[st.session_state.stage]}"
 )
 
 st.progress(st.session_state.stage / 5)
 
 
 # =====================================
-# 12. 화학 물질 출력
+# 14. 화학 물질 출력
 # =====================================
 
 st.header(
@@ -268,7 +335,7 @@ st.divider()
 
 
 # =====================================
-# 13. 현재 분자식 출력
+# 15. 현재 분자식 출력
 # =====================================
 
 formula = print_formula(
@@ -286,7 +353,7 @@ st.divider()
 
 
 # =====================================
-# 14. 주기율표 출력
+# 16. 주기율표 출력
 # =====================================
 
 st.subheader("주기율표")
@@ -316,7 +383,7 @@ for row in range(9):
 
 
 # =====================================
-# 15. 입력 완료 버튼
+# 17. 입력 완료 버튼
 # =====================================
 
 st.divider()
@@ -334,12 +401,12 @@ if st.session_state.status == "playing":
 
 
 # =====================================
-# 16. 정답인 경우
+# 18. 정답인 경우
 # =====================================
 
 elif st.session_state.status == "correct":
 
-    st.success("정답입니다!")
+    st.success("🎉 정답입니다!")
 
     if st.button(
         "다음 단계",
@@ -352,19 +419,17 @@ elif st.session_state.status == "correct":
 
 
 # =====================================
-# 17. 오답인 경우 - 정답 표시
+# 19. 오답인 경우
 # =====================================
 
 elif st.session_state.status == "wrong":
 
-    st.error("오답입니다...")
+    st.error("오답입니다!")
 
-    # 사용자가 입력한 답
     user_answer = print_formula(
         st.session_state.user_formula
     )
 
-    # 실제 정답
     correct_answer = print_formula(
         st.session_state.chemical[1]
     )
@@ -394,7 +459,7 @@ elif st.session_state.status == "wrong":
 
 
 # =====================================
-# 18. 5단계 통과
+# 20. 5단계 통과
 # =====================================
 
 elif st.session_state.status == "finished":
@@ -404,6 +469,8 @@ elif st.session_state.status == "finished":
     st.success("🎉 축하합니다!!")
 
     st.subheader("모든 5단계를 통과했습니다!")
+
+    st.write("분자식 만들기 게임을 완료했습니다!")
 
     if st.button(
         "처음으로 돌아가기",
